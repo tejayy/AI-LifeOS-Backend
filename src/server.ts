@@ -1,11 +1,12 @@
+import dotenv from 'dotenv';
+
+// Load environment variables before anything else
+dotenv.config();
+
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
-
-
-// Load environment variables
-dotenv.config();
+import { prisma } from './config/prisma';
 
 const app = express();
 
@@ -15,8 +16,22 @@ app.use(cookieParser());
 app.use(express.json());
 
 // Routes
-app.get('/', (req, res) => {
-    res.send('LIFEOS API is running 🎉');
+app.get("/", async (_, res) => {
+  try {
+    const users = await prisma.user.findMany();
+
+    res.status(200).json({
+      success: true,
+      users,
+    });
+  } catch (error) {
+    console.error("Database connection failed:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Database connection failed",
+    });
+  }
 });
 
 const PORT = process.env.PORT || 5000;

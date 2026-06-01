@@ -1,0 +1,100 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id       String @id @default(uuid())
+  name     String
+  email    String @unique
+  password String
+
+  habits Habit[]
+  tasks  Task[]
+  notes  Note[]
+  moods  MoodEntry[]
+
+  createdAt DateTime @default(now())
+  updateAt  DateTime @updatedAt
+}
+
+model Habit {
+  id          String  @id @default(uuid())
+  title       String
+  description String?
+
+  streak Int @default(0)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  logs HabitLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model HabitLog {
+  id String @id @default(uuid())
+
+  completed Boolean @default(true)
+
+  date DateTime @default(now())
+
+  habitId String
+  habit   Habit  @relation(fields: [habitId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+model Task {
+  id String @id @default(uuid())
+
+  title       String
+  description String?
+
+  completed Boolean @default(false)
+
+  dueDate DateTime?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Note {
+  id String @id @default(uuid())
+
+  title   String
+  content String
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MoodEntry {
+  id String @id @default(uuid())
+
+  mood String
+
+  note String?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+}
