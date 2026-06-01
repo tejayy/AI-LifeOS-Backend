@@ -1,8 +1,10 @@
 import { NextFunction, Response, Request } from "express";
 import jwt from "jsonwebtoken";
+import { JwtPayload } from "../types/auth.types";
 
 export interface AuthRequest extends Request {
   userId?: string;
+  role?: string;
 }
 
 export const protect = (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -22,7 +24,7 @@ export const protect = (req: AuthRequest, res: Response, next: NextFunction) => 
       });
     }
 
-    const decoded = jwt.verify(token, jwtSecret) as { userId: string };
+    const decoded = jwt.verify(token, jwtSecret) as JwtPayload;
 
     req.userId = decoded.userId;
     next();
