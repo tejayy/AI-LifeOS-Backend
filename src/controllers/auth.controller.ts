@@ -3,6 +3,8 @@ import { loginUser, registerUser } from "../services/auth.service";
 import { generateToken } from "../utils/generateToken";
 import { prisma } from "../config/prisma";
 import { AuthRequest } from "../middleware/auth.middleware";
+import { generateAccessToken, generateRefreshToken } from "../utils/tokens";
+import jwt from "jsonwebtoken";
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -42,9 +44,27 @@ export const login = async (req: Request, res: Response) => {
 
     const user = await loginUser(email, password);
 
-    const token = generateToken(user.id);
+    // const token = generateToken(user.id);
+    const accessToken = generateAccessToken(user.id);
+    const refreshToken = generateRefreshToken(user.id);
 
-    res.cookie("token", token, {
+    await prisma.user.update({
+      where: {
+        id: user.id,
+      },
+      data: {
+        refreshToken,
+      },
+    });
+
+    res.cookie("accessToken", accessToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      maxAge: 15 * 60 * 1000,
+    });
+
+    res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: false,
       sameSite: "lax",
@@ -68,7 +88,19 @@ export const login = async (req: Request, res: Response) => {
 };
 
 export const logout = async (req: Request, res: Response) => {
-  res.clearCookie("token");
+  const user = req.body;
+  await prisma.user.update({
+    where: {
+      id: user.id,
+    },
+    data: {
+      refreshToken: null,
+    },
+  });
+
+  res.clearCookie("accessToken");
+
+  res.clearCookie("refreshToken");
 
   res.json({
     success: true,
@@ -94,4 +126,41 @@ export const profile = async (req: AuthRequest, res: Response) => {
   });
 
   res.json({ user });
+};
+
+export const refresh = async (req: Request, res: Response) => {
+  const token = req.cookies.refreshToken;
+
+  if (!token) {
+    return res.status(401).json({
+      message: "No refresh token",
+    });
+  }
+
+  const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET!) as { userId: string };
+
+  const user = await prisma.user.findUnique({
+    where: {
+      id: decoded.userId,
+    },
+  });
+
+  if (!user || user.refreshToken !== token) {
+    return res.status(401).json({
+      message: "Invalid refresh token",
+    });
+  }
+
+  const newAccessToken = generateAccessToken(user.id);
+
+  res.cookie("accessToken", newAccessToken, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: false,
+    maxAge: 15 * 60 * 1000,
+  });
+
+  res.json({
+    success: true,
+  });
 };

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { login, logout, profile, register } from "../controllers/auth.controller";
+import { login, logout, profile, refresh, register } from "../controllers/auth.controller";
 import { validate } from "../middleware/validate";
 import { registerSchema } from "../validations/auth.validation";
 
@@ -9,5 +9,6 @@ router.post("/register", register);
 router.post("/login", login);
 router.post("/logout", logout);
 router.post("/profile", profile);
+router.post("/refresh", refresh);
 
 export default router;

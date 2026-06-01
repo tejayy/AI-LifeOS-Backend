@@ -7,7 +7,7 @@ export interface AuthRequest extends Request {
 
 export const protect = (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const token = req.cookies.token;
+    const token = req.cookies.accessToken;
 
     if (!token || !token.startsWith("Bearer")) {
       return res.status(401).json({

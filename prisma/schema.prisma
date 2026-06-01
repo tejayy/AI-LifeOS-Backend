@@ -12,11 +12,18 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Role {
+  USER
+  ADMIN
+}
+
 model User {
   id       String @id @default(uuid())
   name     String
   email    String @unique
   password String
+  role Role @default(USER)
+  refreshToken  String?
 
   habits Habit[]
   tasks  Task[]
