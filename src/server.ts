@@ -1,24 +1,30 @@
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
 
 // Load environment variables before anything else
 dotenv.config();
 
-import express from 'express';
-import cors from 'cors';
-import cookieParser from 'cookie-parser';
-import { prisma } from './config/prisma';
+import express from "express";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import { prisma } from "./config/prisma";
+import authRoute from "./routes/auth.routes";
 
 const app = express();
 
 // Middleware
-app.use(cors({
-  origin:"http://localhost:5173",
-  credentials:true
-}));
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
 app.use(cookieParser());
 app.use(express.json());
 
 // Routes
+app.use("/api/auth", authRoute);
+
+//DB Connection
 app.get("/", async (_, res) => {
   try {
     const users = await prisma.user.findMany();
@@ -40,5 +46,5 @@ app.get("/", async (_, res) => {
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-    console.log(`Server running on port http://localhost:${PORT}`);
+  console.log(`Server running on port http://localhost:${PORT}`);
 });
