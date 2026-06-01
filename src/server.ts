@@ -8,6 +8,7 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import { prisma } from "./config/prisma";
 import authRoute from "./routes/auth.routes";
+import { errorHandler } from "./middleware/error.middleware";
 
 const app = express();
 
@@ -23,6 +24,9 @@ app.use(express.json());
 
 // Routes
 app.use("/api/auth", authRoute);
+
+//ERROR HANDLER
+app.use(errorHandler);
 
 //DB Connection
 app.get("/", async (_, res) => {
