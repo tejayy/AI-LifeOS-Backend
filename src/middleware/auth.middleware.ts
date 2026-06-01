@@ -9,14 +9,23 @@ export interface AuthRequest extends Request {
 
 export const protect = (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const token = req.cookies.accessToken;
+    // Support both cookie and Authorization header (for Postman)
+    let token = req.cookies.accessToken;
 
-    if (!token || !token.startsWith("Bearer")) {
+    if (!token) {
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith("Bearer ")) {
+        token = authHeader.split(" ")[1];
+      }
+    }
+
+    if (!token) {
       return res.status(401).json({
         message: "Unauthorized",
       });
     }
-    const jwtSecret = process.env.JWT_SECRET;
+
+    const jwtSecret = process.env.JWT_ACCESS_SECRET;
 
     if (!jwtSecret) {
       return res.status(500).json({
@@ -27,6 +36,7 @@ export const protect = (req: AuthRequest, res: Response, next: NextFunction) => 
     const decoded = jwt.verify(token, jwtSecret) as JwtPayload;
 
     req.userId = decoded.userId;
+    req.role = decoded.role;
     next();
   } catch (error) {
     return res.status(401).json({

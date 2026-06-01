@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-
+import morgan from "morgan";
 // Load environment variables before anything else
 dotenv.config();
 
@@ -21,6 +21,7 @@ app.use(
 );
 app.use(cookieParser());
 app.use(express.json());
+app.use(morgan("🚀 :method :url | :status | :response-time ms"));
 
 // Routes
 app.use("/api/auth", authRoute);

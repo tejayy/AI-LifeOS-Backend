@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import { loginUser, registerUser } from "../services/auth.service";
-import { generateToken } from "../utils/generateToken";
 import { prisma } from "../config/prisma";
 import { AuthRequest } from "../middleware/auth.middleware";
 import { generateAccessToken, generateRefreshToken } from "../utils/tokens";
@@ -12,9 +11,22 @@ export const register = async (req: Request, res: Response) => {
 
     const user = await registerUser(name, email, password);
 
-    const token = generateToken(user.id);
+    const accessToken = generateAccessToken(user.id);
+    const refreshToken = generateRefreshToken(user.id);
 
-    res.cookie("token", token, {
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { refreshToken },
+    });
+
+    res.cookie("accessToken", accessToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      maxAge: 15 * 60 * 1000,
+    });
+
+    res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: false,
       sameSite: "lax",
@@ -22,8 +34,10 @@ export const register = async (req: Request, res: Response) => {
     });
 
     res.status(201).json({
-      succes: true,
-      message: "User Register",
+      success: true,
+      message: "User Registered",
+      //TODO REMOVE ACCESS TOKEN
+      accessToken,
       user: {
         id: user.id,
         name: user.name,
@@ -73,6 +87,7 @@ export const login = async (req: Request, res: Response) => {
 
     res.json({
       success: true,
+      accessToken,
       user: {
         id: user.id,
         name: user.name,
@@ -113,6 +128,7 @@ export const profile = async (req: AuthRequest, res: Response) => {
     res.status(401).json({ success: false, message: "Unauthorized" });
     return;
   }
+  console.log(req.userId);
 
   const user = await prisma.user.findUnique({
     where: {
