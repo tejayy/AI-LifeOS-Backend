@@ -10,7 +10,7 @@ const router = Router();
 
 router.post("/register", register);
 router.post("/login", login);
-router.post("/logout", logout);
+router.post("/logout", protect, logout);
 router.post("/profile", protect, authorize(Role.ADMIN, Role.USER), profile);
 router.post("/refresh", refresh);
 

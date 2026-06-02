@@ -102,11 +102,17 @@ export const login = async (req: Request, res: Response) => {
   }
 };
 
-export const logout = async (req: Request, res: Response) => {
-  const user = req.body;
+export const logout = async (req: AuthRequest, res: Response) => {
+  if (!req.userId) {
+    return res.status(401).json({
+      success: false,
+      message: "Unauthorized",
+    });
+  }
+
   await prisma.user.update({
     where: {
-      id: user.id,
+      id: req.userId,
     },
     data: {
       refreshToken: null,
@@ -114,12 +120,11 @@ export const logout = async (req: Request, res: Response) => {
   });
 
   res.clearCookie("accessToken");
-
   res.clearCookie("refreshToken");
 
   res.json({
     success: true,
-    message: "User  Logged out ",
+    message: "Logged out successfully",
   });
 };
 
