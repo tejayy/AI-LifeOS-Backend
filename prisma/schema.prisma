@@ -39,7 +39,8 @@ model Habit {
   title       String
   description String?
 
-  streak Int @default(0)
+  currentStreak  Int @default(0)
+  longestStreak   Int @default(0)
 
   userId String
   user   User   @relation(fields: [userId], references: [id])
@@ -53,14 +54,15 @@ model Habit {
 model HabitLog {
   id String @id @default(uuid())
 
-  completed Boolean @default(true)
+  // completed Boolean @default(true)
 
   date DateTime @default(now())
 
   habitId String
-  habit   Habit  @relation(fields: [habitId], references: [id])
+  habit   Habit  @relation(fields: [habitId], references: [id],  onDelete: Cascade)
 
   createdAt DateTime @default(now())
+  @@unique([habitId,date])
 }
 
 model Task {

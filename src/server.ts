@@ -7,8 +7,10 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { prisma } from "./config/prisma";
-import authRoute from "./routes/auth.routes";
+import authRoute from "./modules/auth/auth.routes";
+import habitRoute from "./modules/habits/habit.route";
 import { errorHandler } from "./middleware/error.middleware";
+import { protect } from "./middleware/auth.middleware";
 
 const app = express();
 
@@ -25,6 +27,7 @@ app.use(morgan("🚀 :method :url | :status | :response-time ms"));
 
 // Routes
 app.use("/api/auth", authRoute);
+app.use("/api/habits", protect, habitRoute);
 
 //ERROR HANDLER
 app.use(errorHandler);
